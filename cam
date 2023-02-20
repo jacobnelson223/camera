@@ -73,5 +73,33 @@
           console.error('Error accessing media devices.', error);
         });
     </script>
-  </body>
-</html>
+    <script>
+      const recordButton = document.getElementById('record');
+      const stopButton = document.getElementById('stop');
+      
+      function download(blob, fileExtension) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        document.body.appendChild(a);
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `my-recording.${fileExtension}`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      }
+      
+      recordButton.addEventListener('click', () => {
+        chunks = [];
+        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.addEventListener('dataavailable', (event) => {
+          chunks.push(event.data);
+        });
+        
+        mediaRecorder.addEventListener('stop', () => {
+          const completeBlob = new Blob(chunks, { type: 'video/webm' });
+          
+          // Download WebM video
+          download(completeBlob, 'webm');
+          
+          // Convert WebM to MP
+
