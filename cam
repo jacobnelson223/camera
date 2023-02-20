@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Record Video</title>
+  </head>
+  <body>
+    <video id="video" autoplay></video>
+    <button id="record">Record</button>
+    <button id="stop" disabled>Stop</button>
+    <div id="status"></div>
+    <script>
+      navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+        .then((stream) => {
+          const video = document.getElementById('video');
+          video.srcObject = stream;
+
+          let mediaRecorder;
+          let chunks = [];
+
+          const startRecording = () => {
+            chunks = [];
+            mediaRecorder = new MediaRecorder(stream);
+
+            mediaRecorder.addEventListener('dataavailable', (event) => {
+              chunks.push(event.data);
+            });
+
+            mediaRecorder.addEventListener('stop', () => {
+              const blob = new Blob(chunks, { type: 'video/webm' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              document.body.appendChild(a);
+              a.style.display = 'none';
+              a.href = url;
+              a.download = 'my-recording.webm';
+              a.click();
+              window.URL.revokeObjectURL(url);
+
+              recordButton.disabled = false;
+              stopButton.disabled = true;
+              status.innerHTML = '';
+            });
+
+            mediaRecorder.addEventListener('error', (event) => {
+              console.error('Error: MediaRecorder', event.error);
+            });
+
+            mediaRecorder.start();
+
+            recordButton.disabled = true;
+            stopButton.disabled = false;
+            status.innerHTML = 'Recording...';
+          };
+
+          const stopRecording = () => {
+            mediaRecorder.stop();
+          };
+
+          const recordButton = document.getElementById('record');
+          const stopButton = document.getElementById('stop');
+          const status = document.getElementById('status');
+
+          recordButton.addEventListener('click', () => {
+            startRecording();
+          });
+
+          stopButton.addEventListener('click', () => {
+            stopRecording();
+          });
+        })
+        .catch((error) => {
+          console.error('Error accessing media devices.', error);
+        });
+    </script>
+  </body>
+</html>
